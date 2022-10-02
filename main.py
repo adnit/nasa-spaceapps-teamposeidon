@@ -5,27 +5,45 @@ import math
 import json
 
 
-data_dict = {}
+sea_level_dict = {}
+co2_level_dict = {}
  
 with open('sea_level.csv', encoding = 'utf-8') as csv_file_handler:
     csv_reader = csv.DictReader(csv_file_handler)
     for rows in csv_reader:
       key = rows['ID']
-      data_dict[key] = rows
+      sea_level_dict[key] = rows
+
+with open('co2.csv', encoding = 'utf-8') as csv_file_handler:
+    csv_reader = csv.DictReader(csv_file_handler)
+    for rows in csv_reader:
+      key = rows['year']
+      co2_level_dict[key] = rows
 
 def get_sealevel_past(year):
   shuma = 0.0
   sasia = 0
-  for i in data_dict.keys():
-    if int(float(data_dict[i].get(' Year'))) == year:
-      shuma += float(data_dict[i].get('StdDevGMSL_noGIA'))
+  for i in sea_level_dict.keys():
+    if int(float(sea_level_dict[i].get(' Year'))) == year:
+      shuma += float(sea_level_dict[i].get('StdDevGMSL_noGIA'))
       sasia += 1
   
   return math.floor((shuma/sasia + 38.6) * 100)/100.0
 
 def get_sealevel_future(year):
   yearly_sea_rise = 3.04
-  return get_sealevel_past(2022) + (yearly_sea_rise * (year - 2022))
+  return (get_sealevel_past(2022) + (yearly_sea_rise * (int(year) - 2022)))
+
+def get_co2(year):
+  year = '%s' % year
+  yearly_co2_rise = 1.8
+  if int(year) <= 2021:
+    return float(co2_level_dict[year].get('mean'))
+  else:
+    return float(get_co2(2021) + (yearly_co2_rise * (int(year) - 2021)))
+
+def floor(a):
+  return math.floor(a * 100)/100.0
 
 app = FastAPI()
 
@@ -47,4 +65,5 @@ def read_item(year: str, q: Union[str, None] = None):
       sea_level = get_sealevel_past(2022)
     
     return {"year": year,
-     "sea-level": sea_level}
+     "sea-level": floor(sea_level),
+     "co2-level": floor(get_co2(year))}
