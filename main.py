@@ -7,6 +7,7 @@ import json
 
 sea_level_dict = {}
 co2_level_dict = {}
+global_temp_dict = {}
  
 with open('sea_level.csv', encoding = 'utf-8') as csv_file_handler:
     csv_reader = csv.DictReader(csv_file_handler)
@@ -19,6 +20,12 @@ with open('co2.csv', encoding = 'utf-8') as csv_file_handler:
     for rows in csv_reader:
       key = rows['year']
       co2_level_dict[key] = rows
+
+with open('global_temp.csv', encoding = 'utf-8') as csv_file_handler:
+    csv_reader = csv.DictReader(csv_file_handler)
+    for rows in csv_reader:
+      key = rows['Year']
+      global_temp_dict[key] = rows
 
 def get_sealevel_past(year):
   shuma = 0.0
@@ -41,6 +48,15 @@ def get_co2(year):
     return float(co2_level_dict[year].get('mean'))
   else:
     return float(get_co2(2021) + (yearly_co2_rise * (int(year) - 2021)))
+
+def get_global_temp(year):
+  year = '%s' % year
+  yearly_temp_rise = 0.11
+  if int(year) <= 2016:
+    return float(global_temp_dict[year].get('Mean'))
+  else:
+    return float(get_global_temp(2016) + (yearly_temp_rise * (int(year) - 2016)))
+
 
 def floor(a):
   return math.floor(a * 100)/100.0
@@ -66,4 +82,5 @@ def read_item(year: str, q: Union[str, None] = None):
     
     return {"year": year,
      "sea-level": floor(sea_level),
-     "co2-level": floor(get_co2(year))}
+     "co2-level": floor(get_co2(year)),
+     "global_temp": floor(get_global_temp(year))}
